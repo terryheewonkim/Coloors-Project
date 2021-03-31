@@ -65,6 +65,8 @@ function randomColors() {
 
     colorizeSliders(color, hue, brightness, saturation);
   });
+  // Reset inputs/sliders
+  resetSliders();
 }
 
 // Check contrast of h2 text with background color
@@ -96,6 +98,11 @@ function colorizeSliders(color, hue, brightness, saturation) {
     0
   )}, ${scaleBrightness(0.5)}, ${scaleBrightness(1)})`;
   hue.style.backgroundImage = `linear-gradient(to right, #FF0000, #FFFF00, #00FF00, #00FFFF, #0000FF, #FF00FF, #FF0000)`;
+
+  // Set the values of the sliders
+  // hue.value = color.hsl()[0];
+  // saturation.value = color.hsl()[1];
+  // brightness.value = color.hsl()[2];
 }
 
 // Update bg color according to changes in sliders
@@ -118,6 +125,8 @@ function hslControls(e) {
     .set("hsl.h", hue.value);
 
   colorDivs[index].style.backgroundColor = color;
+  // Colorize inputs/sliders
+  colorizeSliders(color, hue, brightness, saturation);
 }
 
 // Update the text that shows the hex code
@@ -133,6 +142,28 @@ function updateTextUI(index) {
   for (icon of icons) {
     checkTextContrast(color, icon);
   }
+}
+
+// Reset sliders
+function resetSliders() {
+  sliders.forEach((slider) => {
+    const color = initialColors[slider.getAttribute(`data-${slider.name}`)],
+      hueValue = chroma(color).hsl()[0].toFixed(2),
+      saturationValue = chroma(color).hsl()[1].toFixed(2),
+      brightnessValue = chroma(color).hsl()[2].toFixed(2);
+
+    switch (slider.name) {
+      case "hue":
+        slider.value = hueValue;
+        break;
+      case "brightness":
+        slider.value = brightnessValue;
+        break;
+      case "saturation":
+        slider.value = saturationValue;
+        break;
+    }
+  });
 }
 
 randomColors();
