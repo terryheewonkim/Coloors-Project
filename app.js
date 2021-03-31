@@ -6,6 +6,20 @@ const currentHexes = document.querySelectorAll(".color h2");
 let initialColors;
 
 ///////////////////////////////////////
+// EVENT LISTENERS
+///////////////////////////////////////
+
+sliders.forEach((slider) => {
+  slider.addEventListener("input", hslControls);
+});
+
+colorDivs.forEach((div, index) => {
+  div.addEventListener("change", () => {
+    updateTextUI(index);
+  });
+});
+
+///////////////////////////////////////
 // FUNCTIONS
 ///////////////////////////////////////
 
@@ -28,9 +42,12 @@ function generateHex() {
 
 // Loop through each color div and assign a random color
 function randomColors() {
+  initialColors = [];
   colorDivs.forEach((div, index) => {
     const hexText = div.children[0];
     const randomColor = generateHex();
+    // Add it to initial colors array
+    initialColors.push(chroma(randomColor).hex());
 
     // Add color to the background
     div.style.backgroundColor = randomColor;
@@ -38,6 +55,15 @@ function randomColors() {
 
     // Check for contrast
     checkTextContrast(randomColor, hexText);
+
+    // Initialize colorize sliders
+    const color = chroma(randomColor);
+    const sliders = div.querySelectorAll(".sliders input");
+    const hue = sliders[0];
+    const brightness = sliders[1];
+    const saturation = sliders[2];
+
+    colorizeSliders(color, hue, brightness, saturation);
   });
 }
 
@@ -49,6 +75,63 @@ function checkTextContrast(color, text) {
     text.style.color = "black";
   } else {
     text.style.color = "white";
+  }
+}
+
+// Set values on sliders
+function colorizeSliders(color, hue, brightness, saturation) {
+  // Scale saturation
+  const noSat = color.set("hsl.s", 0);
+  const fullSat = color.set("hsl.s", 1);
+  const scaleSat = chroma.scale([noSat, color, fullSat]);
+  // Scale brightness
+  const midBright = color.set("hsl.l", 0.5);
+  const scaleBrightness = chroma.scale(["black", midBright, "white"]);
+
+  // Update input colors
+  saturation.style.backgroundImage = `linear-gradient(to right, ${scaleSat(
+    0
+  )}, ${scaleSat(1)})`;
+  brightness.style.backgroundImage = `linear-gradient(to right, ${scaleBrightness(
+    0
+  )}, ${scaleBrightness(0.5)}, ${scaleBrightness(1)})`;
+  hue.style.backgroundImage = `linear-gradient(to right, #FF0000, #FFFF00, #00FF00, #00FFFF, #0000FF, #FF00FF, #FF0000)`;
+}
+
+// Update bg color according to changes in sliders
+function hslControls(e) {
+  const index =
+    e.target.getAttribute("data-hue") ||
+    e.target.getAttribute("data-bright") ||
+    e.target.getAttribute("data-sat");
+  let sliders = e.target.parentElement.querySelectorAll("input[type=range]");
+  const hue = sliders[0];
+  const brightness = sliders[1];
+  const saturation = sliders[2];
+
+  // Refer to initial color, not the changed color
+  const bgColor = initialColors[index];
+
+  let color = chroma(bgColor)
+    .set("hsl.s", saturation.value)
+    .set("hsl.l", brightness.value)
+    .set("hsl.h", hue.value);
+
+  colorDivs[index].style.backgroundColor = color;
+}
+
+// Update the text that shows the hex code
+function updateTextUI(index) {
+  const activeDiv = colorDivs[index];
+  const color = chroma(activeDiv.style.backgroundColor);
+  const textHex = activeDiv.querySelector("h2");
+  const icons = activeDiv.querySelectorAll(".controls button");
+
+  textHex.innerText = color.hex();
+  // check text contrast
+  checkTextContrast(color, textHex);
+  for (icon of icons) {
+    checkTextContrast(color, icon);
   }
 }
 
