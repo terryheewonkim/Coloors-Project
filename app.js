@@ -3,6 +3,7 @@ const colorDivs = document.querySelectorAll(".color");
 const generateBtn = document.querySelector(".generate");
 const sliders = document.querySelectorAll(`input[type="range"]`);
 const currentHexes = document.querySelectorAll(".color h2");
+const popup = document.querySelector(".copy-container");
 let initialColors;
 
 ///////////////////////////////////////
@@ -17,6 +18,18 @@ colorDivs.forEach((div, index) => {
   div.addEventListener("change", () => {
     updateTextUI(index);
   });
+});
+
+currentHexes.forEach((hex) => {
+  hex.addEventListener("click", () => {
+    copyToClipboard(hex);
+  });
+});
+
+popup.addEventListener("transitionend", () => {
+  const popupBox = popup.children[0];
+  popup.classList.remove("active");
+  popupBox.classList.remove("active");
 });
 
 ///////////////////////////////////////
@@ -86,7 +99,7 @@ function colorizeSliders(color, hue, brightness, saturation) {
   const noSat = color.set("hsl.s", 0);
   const fullSat = color.set("hsl.s", 1);
   const scaleSat = chroma.scale([noSat, color, fullSat]);
-  // Scale brightness
+  // Scale brightness (black, color value, white)
   const midBright = color.set("hsl.l", 0.5);
   const scaleBrightness = chroma.scale(["black", midBright, "white"]);
 
@@ -98,11 +111,6 @@ function colorizeSliders(color, hue, brightness, saturation) {
     0
   )}, ${scaleBrightness(0.5)}, ${scaleBrightness(1)})`;
   hue.style.backgroundImage = `linear-gradient(to right, #FF0000, #FFFF00, #00FF00, #00FFFF, #0000FF, #FF00FF, #FF0000)`;
-
-  // Set the values of the sliders
-  // hue.value = color.hsl()[0];
-  // saturation.value = color.hsl()[1];
-  // brightness.value = color.hsl()[2];
 }
 
 // Update bg color according to changes in sliders
@@ -144,7 +152,7 @@ function updateTextUI(index) {
   }
 }
 
-// Reset sliders
+// Reset sliders on load
 function resetSliders() {
   sliders.forEach((slider) => {
     const color = initialColors[slider.getAttribute(`data-${slider.name}`)],
@@ -166,4 +174,21 @@ function resetSliders() {
   });
 }
 
+// Copy to clipboard function
+function copyToClipboard(hex) {
+  // Create a temporary variable to store the hex value
+  const temp = document.createElement("textarea");
+  temp.value = hex.innerText;
+  document.body.appendChild(temp);
+  // Select all text inside textarea, and then copy to clipboard
+  temp.select();
+  document.execCommand("copy");
+  document.body.removeChild(temp);
+  // Popup animation
+  const popupBox = popup.children[0];
+  popup.classList.add("active");
+  popupBox.classList.add("active");
+}
+
+// Generate random colors on page load
 randomColors();
