@@ -4,11 +4,17 @@ const generateBtn = document.querySelector(".generate");
 const sliders = document.querySelectorAll(`input[type="range"]`);
 const currentHexes = document.querySelectorAll(".color h2");
 const popup = document.querySelector(".copy-container");
+const adjustBtns = document.querySelectorAll(".adjust");
+const lockBtns = document.querySelectorAll(".lock");
+const closeAdjustBtns = document.querySelectorAll(".close-adjustment");
+const sliderContainers = document.querySelectorAll(".sliders");
 let initialColors;
 
 ///////////////////////////////////////
 // EVENT LISTENERS
 ///////////////////////////////////////
+
+generateBtn.addEventListener("click", randomColors);
 
 sliders.forEach((slider) => {
   slider.addEventListener("input", hslControls);
@@ -30,6 +36,29 @@ popup.addEventListener("transitionend", () => {
   const popupBox = popup.children[0];
   popup.classList.remove("active");
   popupBox.classList.remove("active");
+});
+
+adjustBtns.forEach((btn, index) => {
+  btn.addEventListener("click", () => {
+    openAdjustmentPanel(index);
+  });
+});
+
+closeAdjustBtns.forEach((btn, index) => {
+  btn.addEventListener("click", () => {
+    closeAdjustmentPanel(index);
+  });
+});
+
+lockBtns.forEach((btn, index) => {
+  btn.addEventListener("click", () => {
+    colorDivs[index].classList.toggle("locked");
+    if (colorDivs[index].classList.contains("locked")) {
+      btn.innerHTML = `<i class="fas fa-lock"></i>`;
+    } else {
+      btn.innerHTML = `<i class="fas fa-lock-open"></i>`;
+    }
+  });
 });
 
 ///////////////////////////////////////
@@ -56,11 +85,21 @@ function generateHex() {
 // Loop through each color div and assign a random color
 function randomColors() {
   initialColors = [];
+
   colorDivs.forEach((div, index) => {
     const hexText = div.children[0];
     const randomColor = generateHex();
-    // Add it to initial colors array
-    initialColors.push(chroma(randomColor).hex());
+    const icons = div.querySelectorAll(".controls button");
+
+    // Check if current div is locked.
+    // If locked, push the previous value and return out of the for loop
+    // If not, push to initialColors array
+    if (div.classList.contains("locked")) {
+      initialColors.push(hexText.innerText);
+      return;
+    } else {
+      initialColors.push(chroma(randomColor).hex());
+    }
 
     // Add color to the background
     div.style.backgroundColor = randomColor;
@@ -68,6 +107,9 @@ function randomColors() {
 
     // Check for contrast
     checkTextContrast(randomColor, hexText);
+    for (icon of icons) {
+      checkTextContrast(randomColor, icon);
+    }
 
     // Initialize colorize sliders
     const color = chroma(randomColor);
@@ -188,6 +230,15 @@ function copyToClipboard(hex) {
   const popupBox = popup.children[0];
   popup.classList.add("active");
   popupBox.classList.add("active");
+}
+
+// Open adjustment panels according to index
+function openAdjustmentPanel(index) {
+  sliderContainers[index].classList.toggle("active");
+}
+
+function closeAdjustmentPanel(index) {
+  sliderContainers[index].classList.remove("active");
 }
 
 // Generate random colors on page load

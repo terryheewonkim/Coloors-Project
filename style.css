@@ -47,14 +47,14 @@ svg {
   position: absolute;
   bottom: 0%;
   background: #fff;
-  /* opacity: 0; */
+  opacity: 0;
   padding: 1rem;
   width: 80%;
   border-top-right-radius: 1rem;
   border-top-left-radius: 1rem;
-  /* pointer-events: none; */
+  pointer-events: none;
   /* Add an adjustment class */
-  /* transform: translateY(100px); */
+  transform: translateY(100px);
   transition: all 500ms ease-in-out;
 }
 
@@ -142,6 +142,7 @@ input[type="range"] {
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: all 500ms ease-in-out;
   opacity: 0;
   pointer-events: none;
 }
@@ -153,7 +154,7 @@ input[type="range"] {
   justify-content: space-evenly;
   align-items: center;
   border-radius: 1rem;
-  transition: transform 800ms ease;
+  transition: transform 500ms ease;
   transform: translateY(-2rem);
   min-width: 30%;
   min-height: 30vh;
