@@ -169,8 +169,8 @@ function colorizeSliders(color, hue, brightness, saturation) {
 function hslControls(e) {
   const index =
     e.target.getAttribute("data-hue") ||
-    e.target.getAttribute("data-bright") ||
-    e.target.getAttribute("data-sat");
+    e.target.getAttribute("data-brightness") ||
+    e.target.getAttribute("data-saturation");
   let sliders = e.target.parentElement.querySelectorAll("input[type=range]");
   const hue = sliders[0];
   const brightness = sliders[1];
@@ -293,7 +293,16 @@ function savePalette(e) {
     colors.push(hex.innerText);
   });
   // Generate object to store in local storage
-  let paletteNum = savedPalettes.length;
+  let paletteNum;
+
+  // Check if local storage exists
+  const paletteObjects = JSON.parse(localStorage.getItem("palettes"));
+  if (paletteObjects) {
+    paletteNum = paletteObjects.length;
+  } else {
+    paletteNum = savedPalettes.length;
+  }
+
   const paletteObj = {
     name,
     colors,
@@ -329,6 +338,14 @@ function savePalette(e) {
     initialColors = [];
     savedPalettes[paletteIndex].colors.forEach((color, index) => {
       initialColors.push(color);
+      // Update sliders background colors
+      const sliders = sliderContainers[index].querySelectorAll(
+        `input[type="range"]`
+      );
+      const hue = sliders[0];
+      const brightness = sliders[1];
+      const saturation = sliders[2];
+      colorizeSliders(chroma(color), hue, brightness, saturation);
       // Update background color, hex text, and contrast checks
       colorDivs[index].style.backgroundColor = color;
       const text = colorDivs[index].children[0];
@@ -371,5 +388,68 @@ function closeLibrary() {
   popup.classList.remove("acitve");
 }
 
+// Retreive from local storage
+function getLocal() {
+  if (localStorage.getItem("palettes") === null) {
+    localPalettes = [];
+  } else {
+    const paletteObjects = JSON.parse(localStorage.getItem("palettes"));
+    // Copy over savedPalettes, which would be empty otherwise
+    savedPalettes = [...paletteObjects];
+    // Generate palette objects into the library for each object in local storage
+    paletteObjects.forEach((paletteObj) => {
+      // Generate palette for library
+      const palette = document.createElement("div");
+      palette.classList.add("custom-palette");
+      const title = document.createElement("h4");
+      title.innerText = paletteObj.name;
+      const preview = document.createElement("div");
+      preview.classList.add("small-preview");
+      paletteObj.colors.forEach((smallColor) => {
+        const smallDiv = document.createElement("div");
+        smallDiv.style.backgroundColor = smallColor;
+        preview.appendChild(smallDiv);
+      });
+      const paletteBtn = document.createElement("button");
+      paletteBtn.classList.add("pick-palette-button");
+      paletteBtn.classList.add(paletteObj.number);
+      paletteBtn.innerText = "Select";
+
+      // Attach event to pick palette button
+      paletteBtn.addEventListener("click", (e) => {
+        closeLibrary();
+        const paletteIndex = e.target.classList[1];
+        // Reset initial colors, push in the ones from saved library
+        initialColors = [];
+        paletteObjects[paletteIndex].colors.forEach((color, index) => {
+          initialColors.push(color);
+          // Update sliders background colors
+          const sliders = sliderContainers[index].querySelectorAll(
+            `input[type="range"]`
+          );
+          const hue = sliders[0];
+          const brightness = sliders[1];
+          const saturation = sliders[2];
+          colorizeSliders(chroma(color), hue, brightness, saturation);
+          // Update background color, hex text, and contrast checks
+          colorDivs[index].style.backgroundColor = color;
+          const text = colorDivs[index].children[0];
+          checkTextContrast(color, text);
+          updateTextUI(index);
+        });
+        resetSliders();
+      });
+
+      // Append to library
+      palette.appendChild(title);
+      palette.appendChild(preview);
+      palette.appendChild(paletteBtn);
+      libraryContainer.children[0].appendChild(palette);
+    });
+  }
+}
+
+// Retreive saved palettes from local storage
+getLocal();
 // Generate random colors on page load
 randomColors();
