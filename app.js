@@ -197,7 +197,7 @@ function updateTextUI(index) {
   const icons = activeDiv.querySelectorAll(".controls button");
 
   textHex.innerText = color.hex();
-  // check text contrast
+  // check text & icons contrast
   checkTextContrast(color, textHex);
   for (icon of icons) {
     checkTextContrast(color, icon);
@@ -259,11 +259,16 @@ const submitSave = document.querySelector(".submit-save");
 const closeSave = document.querySelector(".close-save");
 const saveContainer = document.querySelector(".save-container");
 const saveInput = document.querySelector(".save-container input");
+const libraryContainer = document.querySelector(".library-container");
+const libraryBtn = document.querySelector(".library");
+const closeLibraryBtn = document.querySelector(".close-library");
 
 // EVENT LISTENERS
 saveBtn.addEventListener("click", openPalette);
 closeSave.addEventListener("click", closePalette);
 submitSave.addEventListener("click", savePalette);
+libraryBtn.addEventListener("click", openLibrary);
+closeLibraryBtn.addEventListener("click", closeLibrary);
 
 // FUNCTIONS
 function openPalette(e) {
@@ -299,6 +304,45 @@ function savePalette(e) {
   saveToLocal(paletteObj);
   // Clear input value;
   saveInput.value = "";
+  // Generate palette for library
+  const palette = document.createElement("div");
+  palette.classList.add("custom-palette");
+  const title = document.createElement("h4");
+  title.innerText = paletteObj.name;
+  const preview = document.createElement("div");
+  preview.classList.add("small-preview");
+  paletteObj.colors.forEach((smallColor) => {
+    const smallDiv = document.createElement("div");
+    smallDiv.style.backgroundColor = smallColor;
+    preview.appendChild(smallDiv);
+  });
+  const paletteBtn = document.createElement("button");
+  paletteBtn.classList.add("pick-palette-button");
+  paletteBtn.classList.add(paletteObj.number);
+  paletteBtn.innerText = "Select";
+
+  // Attach event to pick palette button
+  paletteBtn.addEventListener("click", (e) => {
+    closeLibrary();
+    const paletteIndex = e.target.classList[1];
+    // Reset initial colors, push in the ones from saved library
+    initialColors = [];
+    savedPalettes[paletteIndex].colors.forEach((color, index) => {
+      initialColors.push(color);
+      // Update background color, hex text, and contrast checks
+      colorDivs[index].style.backgroundColor = color;
+      const text = colorDivs[index].children[0];
+      checkTextContrast(color, text);
+      updateTextUI(index);
+    });
+    resetSliders();
+  });
+
+  // Append to library
+  palette.appendChild(title);
+  palette.appendChild(preview);
+  palette.appendChild(paletteBtn);
+  libraryContainer.children[0].appendChild(palette);
 }
 
 function saveToLocal(paletteObj) {
@@ -312,6 +356,19 @@ function saveToLocal(paletteObj) {
   // Push palette object & put in storage
   localPalettes.push(paletteObj);
   localStorage.setItem("palettes", JSON.stringify(localPalettes));
+}
+
+// Open & close library
+function openLibrary() {
+  const popup = libraryContainer.children[0];
+  libraryContainer.classList.add("active");
+  popup.classList.add("acitve");
+}
+
+function closeLibrary() {
+  const popup = libraryContainer.children[0];
+  libraryContainer.classList.remove("active");
+  popup.classList.remove("acitve");
 }
 
 // Generate random colors on page load
