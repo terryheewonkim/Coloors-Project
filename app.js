@@ -9,47 +9,57 @@ const lockBtns = document.querySelectorAll(".lock");
 const closeAdjustBtns = document.querySelectorAll(".close-adjustment");
 const sliderContainers = document.querySelectorAll(".sliders");
 let initialColors;
+// For local storage
+let savedPalettes = [];
 
 ///////////////////////////////////////
 // EVENT LISTENERS
 ///////////////////////////////////////
 
+// Generate button produces new colors
 generateBtn.addEventListener("click", randomColors);
 
+// Slider controls
 sliders.forEach((slider) => {
   slider.addEventListener("input", hslControls);
 });
 
+// Update color of each panel based on changes made to controls
 colorDivs.forEach((div, index) => {
   div.addEventListener("change", () => {
     updateTextUI(index);
   });
 });
 
+// Copy to clipboard when you click on hex code
 currentHexes.forEach((hex) => {
   hex.addEventListener("click", () => {
     copyToClipboard(hex);
   });
 });
 
+// Remove active class when transition ends for copy popup box
 popup.addEventListener("transitionend", () => {
   const popupBox = popup.children[0];
   popup.classList.remove("active");
   popupBox.classList.remove("active");
 });
 
+// Open adjustment panel when you click on adjustment button
 adjustBtns.forEach((btn, index) => {
   btn.addEventListener("click", () => {
     openAdjustmentPanel(index);
   });
 });
 
+// Close adjustment panel
 closeAdjustBtns.forEach((btn, index) => {
   btn.addEventListener("click", () => {
     closeAdjustmentPanel(index);
   });
 });
 
+// Toggle lock button icons
 lockBtns.forEach((btn, index) => {
   btn.addEventListener("click", () => {
     colorDivs[index].classList.toggle("locked");
@@ -239,6 +249,69 @@ function openAdjustmentPanel(index) {
 
 function closeAdjustmentPanel(index) {
   sliderContainers[index].classList.remove("active");
+}
+
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+// Implement Save to palette and LOCAL STORAGE stuff
+const saveBtn = document.querySelector(".save");
+const submitSave = document.querySelector(".submit-save");
+const closeSave = document.querySelector(".close-save");
+const saveContainer = document.querySelector(".save-container");
+const saveInput = document.querySelector(".save-container input");
+
+// EVENT LISTENERS
+saveBtn.addEventListener("click", openPalette);
+closeSave.addEventListener("click", closePalette);
+submitSave.addEventListener("click", savePalette);
+
+// FUNCTIONS
+function openPalette(e) {
+  const popup = saveContainer.children[0];
+  saveContainer.classList.add("active");
+  popup.classList.add("active");
+}
+
+function closePalette(e) {
+  const popup = saveContainer.children[0];
+  saveContainer.classList.remove("active");
+  popup.classList.remove("active");
+}
+
+function savePalette(e) {
+  const popup = saveContainer.children[0];
+  saveContainer.classList.remove("active");
+  popup.classList.remove("active");
+  const name = saveInput.value;
+  const colors = [];
+  currentHexes.forEach((hex) => {
+    colors.push(hex.innerText);
+  });
+  // Generate object to store in local storage
+  let paletteNum = savedPalettes.length;
+  const paletteObj = {
+    name,
+    colors,
+    number: paletteNum,
+  };
+  savedPalettes.push(paletteObj);
+  // Save to local storage
+  saveToLocal(paletteObj);
+  // Clear input value;
+  saveInput.value = "";
+}
+
+function saveToLocal(paletteObj) {
+  let localPalettes;
+  // Check if local storage data already exists
+  if (localStorage.getItem("palettes") === null) {
+    localPalettes = [];
+  } else {
+    localPalettes = JSON.parse(localStorage.getItem("palettes"));
+  }
+  // Push palette object & put in storage
+  localPalettes.push(paletteObj);
+  localStorage.setItem("palettes", JSON.stringify(localPalettes));
 }
 
 // Generate random colors on page load
